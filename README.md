@@ -4,7 +4,7 @@ As simple as it gets
 This chat server makes sure your users can chat in realtime
 
 ## Usage Example
-    import { ChatServer, DefaultChatManager } from "chat-server"
+    import { ChatServer, DefaultChatManager, IChatManager } from "chat-server"
 
     // choose a port number that fits you
     const chatServerPort: number = 3000
