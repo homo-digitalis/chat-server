@@ -1,5 +1,5 @@
 {
-  "name": "chat-server",
+  "name": "@homo-digitalis/chat-server",
   "version": "0.1.0",
   "description": "As simple as it gets",
   "main": "./dist/index.js",
