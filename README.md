@@ -9,7 +9,7 @@ This chat server makes sure your users can chat in realtime
     // choose a port number that fits you
     const chatServerPort: number = 3000
 
-    // Instead of using the integrated "DefaultChatManager" you can use your own
+    // Instead of using the "DefaultChatManager" you can use your own
     const chatManager: IChatManager = new DefaultChatManager()
     const chatServer: ChatServer = new ChatServer(chatManager)
 
