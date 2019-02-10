@@ -15,12 +15,14 @@ export class ChatServer {
 
     // tslint:disable-next-line:unnecessary-constructor
     public constructor(private readonly chatManager: IChatManager) {
-        //
     }
 
     public start(port: number): void {
         this.io.on("connection", (socket: any) => {
-
+            console.log("michael")
+            // socket.emit("authentication", { token: "4712" })
+            // socket.on("authenticated", () => {
+            // use the socket as usual
             this.chatManager.handleConnect(socket)
 
             socket.on("disconnect", () => {
@@ -30,16 +32,37 @@ export class ChatServer {
             socket.on("message", (message: any) => {
                 this.chatManager.handleMessage(this.io, JSON.parse(message))
             })
+
+            //            })
         })
 
         this.http.listen(port, () => {
             console.log(`chat server started on port ${port}`)
         })
 
+        // require("socketio-auth")(this.io, {
+        //     authenticate(socket: any, data: any, callback: any): any {
+        //         const validTokens: string[] = []
+        //         validTokens.push("4712")
+        //         //get credentials sent by the client
+        //         console.log(data)
+
+        //         //inform the callback of auth success/failure
+        //         if (validTokens.some((token: string) => token === data.token)) {
+        //             return callback(null, true)
+        //         }
+
+        //         return callback(new Error("User not found"))
+        //     },
+        // })
+
     }
 }
 
-const chatServerPort: number = 3000 // choose any port number that fits you
+console.log(process.argv[2])
+
+// choose any port number that fits you
+const chatServerPort: number = Number(process.argv[2])
 
 const chatServer: ChatServer = new ChatServer(new DefaultChatManager())
 chatServer.start(chatServerPort)
