@@ -10,4 +10,5 @@ export declare class ChatServer {
     private readonly io;
     constructor(administrator: IChatAdministrator);
     start(port: number): void;
+    private startHTTPSServer(server);
 }

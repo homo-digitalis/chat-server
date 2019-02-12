@@ -1,3 +1,9 @@
+// import * as express from "express"
+import * as fs from "fs"
+// import * as helmet from "helmet"
+import * as http from "http"
+import * as https from "https"
+import * as path from "path"
 import { DefaultChatManager } from "./default-chat-manager"
 
 export interface IChatAdministrator {
@@ -8,6 +14,7 @@ export interface IChatAdministrator {
 
 export class ChatServer {
 
+    // private readonly server: any = express()
     private readonly app: any = require("express")()
     private readonly http: any = require("http")
         .Server(this.app)
@@ -49,6 +56,29 @@ export class ChatServer {
             console.log(`chat server started on port ${port}`)
         })
 
+        // if (port === 80) {
+        //     this.app.use("/", require("redirect-https")({
+        //         body: "<!-- Hello Mr Developer! Please use HTTPS instead -->",
+        //     }))
+        //     this.startHTTPSServer(server)
+        // }
+
+        // this.app.use(helmet())
+
+    }
+
+    private startHTTPSServer(server: any): void {
+        try {
+            const httpsOptions: any = {
+                cert: fs.readFileSync("/etc/letsencrypt/live/www.heidelberg-experience.com/cert.pem"),
+                key: fs.readFileSync("/etc/letsencrypt/live/www.heidelberg-experience.com/privkey.pem"),
+            }
+            https.createServer(httpsOptions, server)
+                .listen(443)
+            console.log("https listening on port: 443")
+        } catch (error) {
+            console.log(error.message)
+        }
     }
 }
 
