@@ -22,7 +22,7 @@ export class DefaultChatManager implements IChatAdministrator {
     public async handleMessage(io: any, message: any): Promise<void> {
         io.emit("message", { type: "message", text: message })
 
-        const answer: IAnswer = await this.homoDigitalis.answer("hi")
+        const answer: IAnswer = await this.homoDigitalis.answer(message)
         io.emit("message", { type: "message", text: answer.text })
     }
 

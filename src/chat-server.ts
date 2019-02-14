@@ -81,30 +81,31 @@ export class ChatServer {
             this.expressApp.use("/", require("redirect-https")({
                 body: "<!-- Hello Mr Developer! Please use HTTPS instead -->",
             }))
-            this.startHTTPSServer(this.expressApp)
+            // this.startHTTPSServer(this.expressApp)
         }
 
         // this.app.use(helmet())
 
     }
 
-    private startHTTPSServer(server: any): void {
-        try {
-            const httpsOptions: any = {
-                cert: fs.readFileSync("/etc/letsencrypt/live/www.heidelberg-experience.com/cert.pem"),
-                key: fs.readFileSync("/etc/letsencrypt/live/www.heidelberg-experience.com/privkey.pem"),
-            }
-            https.createServer(httpsOptions, server)
-                .listen(443)
-            console.log("https listening on port: 443")
-        } catch (error) {
-            console.log(error.message)
-        }
-    }
+    // private startHTTPSServer(server: any): void {
+    //     try {
+    //         const httpsOptions: any = {
+    //             cert: fs.readFileSync("/etc/letsencrypt/live/www.heidelberg-experience.com/cert.pem"),
+    //             key: fs.readFileSync("/etc/letsencrypt/live/www.heidelberg-experience.com/privkey.pem"),
+    //         }
+    //         https.createServer(httpsOptions, server)
+    //             .listen(443)
+    //         console.log("https listening on port: 443")
+    //     } catch (error) {
+    //         console.log(error.message)
+    //     }
+    // }
 }
 
 // choose any port number that fits you
-const chatServerPort: number = Number(process.argv[2])
+const chatServerPort: number = (process.argv[2] === undefined) ?
+    Number(process.env.CHAT_SERVER_PORT) : Number(process.argv[2])
 
 const chatServer: ChatServer = new ChatServer(new DefaultChatManager())
 chatServer.start(chatServerPort)
