@@ -1,8 +1,9 @@
-// import * as express from "express"
+import * as express from "express"
 import * as fs from "fs"
-// import * as helmet from "helmet"
+import * as helmet from "helmet"
 import * as http from "http"
 import * as https from "https"
+import { HTTPSProvider } from "https-provider"
 import * as path from "path"
 import { DefaultChatManager } from "./default-chat-manager"
 
@@ -14,13 +15,30 @@ export interface IChatAdministrator {
 
 export class ChatServer {
 
-    // private readonly server: any = express()
-    private readonly app: any = require("express")()
-    private readonly http: any = require("http")
-        .Server(this.app)
-    private readonly io: any = require("socket.io")(this.http)
+    // private readonly http: any = require("http")
+    //     .Server(this.expressApp)
+    // private readonly https: any = require("https")
+    //     .Server(this.expressApp)
+
+    // private readonly io: any = require("socket.io")(this.https)
+
+    private readonly expressApp: any = express()
+    private readonly options: any
+    private readonly server: any
+    private readonly io: any
 
     public constructor(private readonly administrator: IChatAdministrator) {
+
+        console.log(process.env.NODE_ENV)
+        if (process.env.NODE_ENV === "production") {
+            this.options = new HTTPSProvider("my-https-certificate").provideHTTPSOptions()
+            this.server = https.createServer(this.options, this.expressApp)
+        } else {
+            this.server = http.createServer(this.expressApp)
+        }
+
+        this.io = require("socket.io")(this.server)
+
         require("socketio-auth")(this.io, {
             authenticate(socket: any, data: any, callback: any): any {
                 const validTokens: string[] = []
@@ -52,16 +70,17 @@ export class ChatServer {
 
         })
 
-        this.http.listen(port, () => {
+        this.server.listen(port, () => {
             console.log(`chat server started on port ${port}`)
         })
 
-        // if (port === 80) {
-        //     this.app.use("/", require("redirect-https")({
-        //         body: "<!-- Hello Mr Developer! Please use HTTPS instead -->",
-        //     }))
-        //     this.startHTTPSServer(server)
-        // }
+        console.log(port)
+        if (port === 80) {
+            this.expressApp.use("/", require("redirect-https")({
+                body: "<!-- Hello Mr Developer! Please use HTTPS instead -->",
+            }))
+            this.startHTTPSServer(this.expressApp)
+        }
 
         // this.app.use(helmet())
 
