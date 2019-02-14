@@ -8,7 +8,7 @@ import * as path from "path"
 import { DefaultChatManager } from "./default-chat-manager"
 
 export interface IChatAdministrator {
-    handleConnect(socket: any): void
+    handleConnect(socket: any, io: any): void
     handleDisConnect(socket: any): void
     handleMessage(io: any, message: any): void
 }
@@ -60,7 +60,7 @@ export class ChatServer {
 
     public start(port: number): void {
         this.io.on("connection", (socket: any) => {
-            this.administrator.handleConnect(socket)
+            this.administrator.handleConnect(socket, this.io)
 
             socket.on("disconnect", () => {
                 this.administrator.handleDisConnect(socket)

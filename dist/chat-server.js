@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
-const fs = require("fs");
 const http = require("http");
 const https = require("https");
 const https_provider_1 = require("https-provider");
@@ -17,10 +16,12 @@ class ChatServer {
         this.expressApp = express();
         console.log(process.env.NODE_ENV);
         if (process.env.NODE_ENV === "production") {
-            this.options = new https_provider_1.HTTPSProvider("my-https-certificate").provideHTTPSOptions();
+            console.log("starting https");
+            this.options = new https_provider_1.HTTPSProvider("chat-server-certificate").provideHTTPSOptions();
             this.server = https.createServer(this.options, this.expressApp);
         }
         else {
+            console.log("starting http");
             this.server = http.createServer(this.expressApp);
         }
         this.io = require("socket.io")(this.server);
@@ -41,7 +42,7 @@ class ChatServer {
     }
     start(port) {
         this.io.on("connection", (socket) => {
-            this.administrator.handleConnect(socket);
+            this.administrator.handleConnect(socket, this.io);
             socket.on("disconnect", () => {
                 this.administrator.handleDisConnect(socket);
             });
@@ -57,27 +58,14 @@ class ChatServer {
             this.expressApp.use("/", require("redirect-https")({
                 body: "<!-- Hello Mr Developer! Please use HTTPS instead -->",
             }));
-            this.startHTTPSServer(this.expressApp);
+            // this.startHTTPSServer(this.expressApp)
         }
         // this.app.use(helmet())
-    }
-    startHTTPSServer(server) {
-        try {
-            const httpsOptions = {
-                cert: fs.readFileSync("/etc/letsencrypt/live/www.heidelberg-experience.com/cert.pem"),
-                key: fs.readFileSync("/etc/letsencrypt/live/www.heidelberg-experience.com/privkey.pem"),
-            };
-            https.createServer(httpsOptions, server)
-                .listen(443);
-            console.log("https listening on port: 443");
-        }
-        catch (error) {
-            console.log(error.message);
-        }
     }
 }
 exports.ChatServer = ChatServer;
 // choose any port number that fits you
-const chatServerPort = Number(process.argv[2]);
+const chatServerPort = (process.argv[2] === undefined) ?
+    Number(process.env.CHAT_SERVER_PORT) : Number(process.argv[2]);
 const chatServer = new ChatServer(new default_chat_manager_1.DefaultChatManager());
 chatServer.start(chatServerPort);
