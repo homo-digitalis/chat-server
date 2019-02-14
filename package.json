@@ -5,7 +5,8 @@
   "main": "./dist/index.js",
   "typings": "./dist/index.js",
   "scripts": {
-    "start": "node dist/chat-server.js 3000",
+    "start-old": "export NODE_ENV=\"Production\" && node dist/chat-server.js 3000",
+    "start": "export NODE_ENV=\"Production\" && ts-node src/chat-server.ts 3000",
     "test": "jest",
     "test:cov": "jest --coverage",
     "tslint": "tslint -p ./",
