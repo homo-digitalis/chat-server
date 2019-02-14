@@ -6,7 +6,7 @@
   "typings": "./dist/index.js",
   "scripts": {
     "start-old": "export NODE_ENV=\"Production\" && node dist/chat-server.js 443",
-    "pm2-start": "export NODE_ENV=\"Production\" && export CHAT_SERVER_PORT=443 && pm2 start src/chat-server.ts --name chat-server",
+    "pm2-start": "export NODE_ENV=\"Production\" && export CHAT_SERVER_PORT=\"443\" && pm2 start src/chat-server.ts --name chat-server",
     "start": "export NODE_ENV=\"Production\" && ts-node src/chat-server.ts 443",
     "test": "jest",
     "test:cov": "jest --coverage",
