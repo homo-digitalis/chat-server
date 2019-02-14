@@ -27,7 +27,7 @@ class ChatServer {
         require("socketio-auth")(this.io, {
             authenticate(socket, data, callback) {
                 const validTokens = [];
-                validTokens.push("4712");
+                validTokens.push("Fance");
                 if (validTokens.some((token) => token === data.token)) {
                     // tslint:disable-next-line:no-null-keyword
                     return callback(null, socket.id);

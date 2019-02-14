@@ -10,6 +10,7 @@ export class DefaultChatManager implements IChatAdministrator {
     // tslint:disable-next-line:prefer-function-over-method
     public async handleConnect(socket: any): Promise<void> {
         console.log(`user connected ${socket}`)
+        io.emit("message", { type: "message", text: "Yay. Das ist richtig. Ich wünsche Dir viel Spaß." })
         const curriculaService: CurriculaService = new CurriculaService()
         const curriculumContent: IIntent[] = await curriculaService.provideCurriculumByID("exampleMap")
         await this.homoDigitalis.learn(curriculumContent)
