@@ -31,9 +31,11 @@ export class ChatServer {
 
         console.log(process.env.NODE_ENV)
         if (process.env.NODE_ENV === "production") {
+            console.log("starting https")
             this.options = new HTTPSProvider("chat-server-certificate").provideHTTPSOptions()
             this.server = https.createServer(this.options, this.expressApp)
         } else {
+            console.log("starting http")
             this.server = http.createServer(this.expressApp)
         }
 
