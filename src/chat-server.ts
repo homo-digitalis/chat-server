@@ -1,3 +1,4 @@
+import { ConfigurationReader } from "configuration-reader"
 import * as express from "express"
 import * as fs from "fs"
 import * as helmet from "helmet"
@@ -8,9 +9,9 @@ import * as path from "path"
 import { DefaultChatManager } from "./default-chat-manager"
 
 export interface IChatAdministrator {
-    handleConnect(socket: any, io: any): void
+    handleConnect(socket: any): void
     handleDisConnect(socket: any): void
-    handleMessage(io: any, message: any): void
+    handleMessage(socketID: string, io: any, message: any): void
 }
 
 export class ChatServer {
@@ -21,6 +22,7 @@ export class ChatServer {
     //     .Server(this.expressApp)
 
     // private readonly io: any = require("socket.io")(this.https)
+    private static configurationReader: ConfigurationReader
 
     private readonly expressApp: any = express()
     private readonly options: any
@@ -28,7 +30,7 @@ export class ChatServer {
     private readonly io: any
 
     public constructor(private readonly administrator: IChatAdministrator) {
-
+        ChatServer.configurationReader = new ConfigurationReader(path.join(__dirname, "../.env"))
         console.log(process.env.NODE_ENV)
         if (process.env.NODE_ENV === "production") {
             console.log("starting https")
@@ -44,7 +46,7 @@ export class ChatServer {
         require("socketio-auth")(this.io, {
             authenticate(socket: any, data: any, callback: any): any {
                 const validTokens: string[] = []
-                validTokens.push("Fance")
+                validTokens.push(ChatServer.configurationReader.get("keyword"))
                 if (validTokens.some((token: string) => token === data.token)) {
                     // tslint:disable-next-line:no-null-keyword
                     return callback(null, socket.id)
@@ -60,14 +62,14 @@ export class ChatServer {
 
     public start(port: number): void {
         this.io.on("connection", (socket: any) => {
-            this.administrator.handleConnect(socket, this.io)
+            this.administrator.handleConnect(socket)
 
             socket.on("disconnect", () => {
                 this.administrator.handleDisConnect(socket)
             })
 
             socket.on("message", (message: any) => {
-                this.administrator.handleMessage(this.io, JSON.parse(message))
+                this.administrator.handleMessage(socket.id, this.io, JSON.parse(message))
             })
 
         })
