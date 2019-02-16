@@ -8,14 +8,14 @@ export class DefaultChatManager implements IChatAdministrator {
     private readonly authenticatedSocketIDs: string[] = []
     private readonly preparedSocketIDs: string[] = []
     private readonly homoDigitalis: HomoDigitalis = new HomoDigitalis()
+    private readonly curriculaService: CurriculaService = new CurriculaService()
 
     // tslint:disable-next-line:prefer-function-over-method
     public async handleConnect(socket: any): Promise<void> {
         console.log(`user connected ${socket.id}`)
         this.authenticatedSocketIDs.push(socket.id)
 
-        const curriculaService: CurriculaService = new CurriculaService()
-        const curriculumContent: IIntent[] = await curriculaService.provideCurriculumByID("exampleMap")
+        const curriculumContent: IIntent[] = await this.curriculaService.provideCurriculumByID("exampleMap")
         await this.homoDigitalis.learn(curriculumContent)
     }
 
@@ -35,4 +35,12 @@ export class DefaultChatManager implements IChatAdministrator {
             io.emit("message", { type: "message", text: answer.text })
         }
     }
+
+    public async handleTrainingData(chatBotName: string, trainingData: any): Promise<void> {
+        console.log(`TrainingData received: ${JSON.stringify(trainingData)}`)
+        await this.curriculaService.saveCurriculumByID("new2", trainingData)
+        const curriculumContent: IIntent[] = await this.curriculaService.provideCurriculumByID("new2")
+        await this.homoDigitalis.learn(curriculumContent)
+    }
+
 }

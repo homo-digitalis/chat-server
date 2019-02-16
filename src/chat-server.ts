@@ -5,6 +5,7 @@ import * as helmet from "helmet"
 import * as http from "http"
 import * as https from "https"
 import { HTTPSProvider } from "https-provider"
+import { IIntent } from "nlp-trainer"
 import * as path from "path"
 import { DefaultChatManager } from "./default-chat-manager"
 
@@ -12,6 +13,7 @@ export interface IChatAdministrator {
     handleConnect(socket: any): void
     handleDisConnect(socket: any): void
     handleMessage(socketID: string, io: any, message: any): void
+    handleTrainingData(chatbotName: string, intents: IIntent[]): void
 }
 
 export class ChatServer {
@@ -47,7 +49,7 @@ export class ChatServer {
             authenticate(socket: any, data: any, callback: any): any {
                 const validTokens: string[] = []
                 validTokens.push(ChatServer.configurationReader.get("keyword"))
-                if (validTokens.some((token: string) => token === data.token)) {
+                if (validTokens.some((token: string) => token === data.token.toLowerCase())) {
                     // tslint:disable-next-line:no-null-keyword
                     return callback(null, socket.id)
                 } else {
@@ -70,6 +72,10 @@ export class ChatServer {
 
             socket.on("message", (message: any) => {
                 this.administrator.handleMessage(socket.id, this.io, JSON.parse(message))
+            })
+
+            socket.on("training-data", (trainingData: any) => {
+                this.administrator.handleTrainingData(trainingData.chatbotName, trainingData.intents)
             })
 
         })
