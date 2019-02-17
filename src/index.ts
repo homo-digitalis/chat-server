@@ -1,2 +1,2 @@
 export * from "./chat-server"
-export * from "./default-chat-manager"
+export * from "./default-chat-administrator"

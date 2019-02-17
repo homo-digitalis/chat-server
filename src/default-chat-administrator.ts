@@ -4,8 +4,13 @@ import { IIntent } from "nlp-trainer"
 import { IAnswer } from "nlp-with-actions"
 import { IChatAdministrator } from "./chat-server"
 
-export class DefaultChatManager implements IChatAdministrator {
-    private readonly authenticatedSocketIDs: string[] = []
+export interface IAuthenticatedSocketID {
+    socketID: string,
+    room: string
+}
+
+export class DefaultChatAdministrator implements IChatAdministrator {
+    private readonly authenticatedSocketIDs: IAuthenticatedSocketID[] = []
     private readonly preparedSocketIDs: string[] = []
     private readonly homoDigitalis: HomoDigitalis = new HomoDigitalis()
     private readonly curriculaService: CurriculaService = new CurriculaService()
@@ -13,7 +18,11 @@ export class DefaultChatManager implements IChatAdministrator {
     // tslint:disable-next-line:prefer-function-over-method
     public async handleConnect(socket: any): Promise<void> {
         console.log(`user connected ${socket.id}`)
-        this.authenticatedSocketIDs.push(socket.id)
+        const authenticatedSocketID: IAuthenticatedSocketID = {
+            room: "room",
+            socketID: socket.id,
+        }
+        this.authenticatedSocketIDs.push(authenticatedSocketID)
 
         const curriculumContent: IIntent[] =
             await this.curriculaService.provideCurriculumByID("exampleMap")
@@ -25,15 +34,22 @@ export class DefaultChatManager implements IChatAdministrator {
         console.log(`user disconnected: ${socket.id}`)
     }
 
-    public async handleMessage(socketID: string, io: any, message: any): Promise<void> {
+    public async handleMessage(socketID: string, io: any, message: any, room: string): Promise<void> {
         console.log(socketID)
-        if (this.authenticatedSocketIDs.some((authenticatedSocketID: string) => authenticatedSocketID === socketID)) {
-            io.emit("message", { type: "message", text: message })
+        const isSocketIDAuthenticated: boolean =
+            this.authenticatedSocketIDs.some((authenticatedSocketID: IAuthenticatedSocketID) =>
+                authenticatedSocketID.socketID === socketID,
+            )
+
+        if (isSocketIDAuthenticated) {
+            io.to(room)
+                .emit("message", { type: "message", text: message })
             if (!this.preparedSocketIDs.some((preparedSocketID: string) => preparedSocketID === socketID)) {
                 this.preparedSocketIDs.push(socketID)
             }
             const answer: IAnswer = await this.homoDigitalis.answer(message)
-            io.emit("message", { type: "message", text: answer.text })
+            io.to(room)
+                .emit("message", { type: "message", text: answer.text })
         }
     }
 

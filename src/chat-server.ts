@@ -7,25 +7,18 @@ import * as https from "https"
 import { HTTPSProvider } from "https-provider"
 import { IIntent } from "nlp-trainer"
 import * as path from "path"
-import { DefaultChatManager } from "./default-chat-manager"
+import { DefaultChatAdministrator } from "./default-chat-administrator"
 
 export interface IChatAdministrator {
     handleConnect(socket: any): void
     handleDisConnect(socket: any): void
-    handleMessage(socketID: string, io: any, message: any): void
+    handleMessage(socketID: string, io: any, message: any, room: string): void
     handleTrainingData(chatbotName: string, intents: IIntent[]): void
 }
 
 export class ChatServer {
 
-    // private readonly http: any = require("http")
-    //     .Server(this.expressApp)
-    // private readonly https: any = require("https")
-    //     .Server(this.expressApp)
-
-    // private readonly io: any = require("socket.io")(this.https)
     private static configurationReader: ConfigurationReader
-
     private readonly expressApp: any = express()
     private readonly options: any
     private readonly server: any
@@ -70,12 +63,17 @@ export class ChatServer {
                 this.administrator.handleDisConnect(socket)
             })
 
-            socket.on("message", (message: any) => {
-                this.administrator.handleMessage(socket.id, this.io, JSON.parse(message))
+            socket.on("message", (message: any, room: string) => {
+                this.administrator.handleMessage(socket.id, this.io, JSON.parse(message), room)
             })
 
             socket.on("training-data", (trainingData: any) => {
                 this.administrator.handleTrainingData(trainingData.chatbotName, trainingData.intents)
+            })
+
+            socket.on("join", (room: string) => {
+                console.log(`joining room ${room}`)
+                socket.join(room)
             })
 
         })
@@ -89,31 +87,16 @@ export class ChatServer {
             this.expressApp.use("/", require("redirect-https")({
                 body: "<!-- Hello Mr Developer! Please use HTTPS instead -->",
             }))
-            // this.startHTTPSServer(this.expressApp)
         }
 
         // this.app.use(helmet())
 
     }
-
-    // private startHTTPSServer(server: any): void {
-    //     try {
-    //         const httpsOptions: any = {
-    //             cert: fs.readFileSync("/etc/letsencrypt/live/www.heidelberg-experience.com/cert.pem"),
-    //             key: fs.readFileSync("/etc/letsencrypt/live/www.heidelberg-experience.com/privkey.pem"),
-    //         }
-    //         https.createServer(httpsOptions, server)
-    //             .listen(443)
-    //         console.log("https listening on port: 443")
-    //     } catch (error) {
-    //         console.log(error.message)
-    //     }
-    // }
 }
 
 // choose any port number that fits you
 const chatServerPort: number = (process.argv[2] === undefined) ?
     Number(process.env.CHAT_SERVER_PORT) : Number(process.argv[2])
 
-const chatServer: ChatServer = new ChatServer(new DefaultChatManager())
+const chatServer: ChatServer = new ChatServer(new DefaultChatAdministrator())
 chatServer.start(chatServerPort)
