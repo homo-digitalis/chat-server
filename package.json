@@ -29,6 +29,7 @@
     }
   },
   "dependencies": {
+    "@homo-digitalis/curricula": "^0.1.1",
     "@types/express": "^4.16.1",
     "@types/helmet": "0.0.41",
     "@types/jest": "^23.3.13",
@@ -37,7 +38,6 @@
     "express": "^4.16.4",
     "helmet": "^3.15.1",
     "homo-digitalis": "^3.0.0",
-    "homo-digitalis-curricula-service": "^0.5.0",
     "https-provider": "^0.3.0",
     "jest": "^24.0.0",
     "nlp-trainer": "^3.1.0",
