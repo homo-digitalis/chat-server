@@ -45,7 +45,7 @@ export class DefaultChatAdministrator implements IChatAdministrator {
             }
             const answer: IAnswer = await this.homoDigitalis.answer(message)
             io.to(room)
-                .emit("message", { type: "message", text: answer.text })
+                .emit("message", { type: "botMessage", text: answer.text })
         }
     }
 

@@ -17,6 +17,11 @@ export interface IChatAdministrator {
     handleGetTrainingData(socketID: string, io: any, chatbotName: string): void
 }
 
+export interface IMessage {
+    text: string
+    fromChatBot: boolean
+}
+
 export class ChatServer {
 
     private static configurationReader: ConfigurationReader
