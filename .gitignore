@@ -1,4 +1,6 @@
 node_modules
 coverage
 .env
+training-data
+training-data-backup
 model.nlp

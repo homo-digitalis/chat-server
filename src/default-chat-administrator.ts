@@ -69,11 +69,11 @@ export class DefaultChatAdministrator implements IChatAdministrator {
 
         try {
             intentsFromFile =
-                JSON.parse(fs.readFileSync(path.join(__dirname, `../${chatBotName}.json`))
+                JSON.parse(fs.readFileSync(path.join(__dirname, `../training-data/${chatBotName}.json`))
                     .toString("utf8"))
         } catch (error) {
             intentsFromFile =
-                JSON.parse(fs.readFileSync(path.join(__dirname, "../fancy.json"))
+                JSON.parse(fs.readFileSync(path.join(__dirname, "../training-data/fancy.json"))
                     .toString("utf8"))
 
         }
@@ -83,7 +83,7 @@ export class DefaultChatAdministrator implements IChatAdministrator {
 
     private saveIntents(chatBotName: string, intents: IIntent[]): void {
 
-        fs.writeFileSync(path.join(__dirname, `../${chatBotName}.json`), JSON.stringify(intents))
+        fs.writeFileSync(path.join(__dirname, `../training-data/${chatBotName}.json`), JSON.stringify(intents))
     }
 
 }
