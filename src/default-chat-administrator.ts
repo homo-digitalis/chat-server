@@ -1,7 +1,9 @@
 import { CurriculaService } from "@homo-digitalis/curricula"
+import * as fs from "fs"
 import { HomoDigitalis } from "homo-digitalis"
 import { IIntent } from "nlp-trainer"
 import { IAnswer } from "nlp-with-actions"
+import * as path from "path"
 import { IChatAdministrator } from "./chat-server"
 
 export interface IAuthenticatedSocketID {
@@ -23,10 +25,6 @@ export class DefaultChatAdministrator implements IChatAdministrator {
         }
         this.authenticatedSocketIDs.push(authenticatedSocketID)
 
-        const curriculumContent: IIntent[] =
-            await this.curriculaService.provideCurriculumByID("exampleMap")
-
-        await this.homoDigitalis.learn(curriculumContent)
     }
 
     public handleDisConnect(socket: any): void {
@@ -53,43 +51,39 @@ export class DefaultChatAdministrator implements IChatAdministrator {
 
     public async handleGetTrainingData(socketID: string, io: any, chatBotName: any): Promise<void> {
         console.log(chatBotName)
+        const intents: IIntent[] = this.getIntents(chatBotName)
         io.to(chatBotName)
-            .emit("trainingdata", this.getIntents())
+            .emit("trainingdata", intents)
+
+        await this.homoDigitalis.learn(intents)
     }
 
-    public async handleTrainingData(chatBotName: string, trainingData: any): Promise<void> {
-        await this.curriculaService.saveCurriculumByID(chatBotName, trainingData)
-        const curriculumContent: IIntent[] = await this.curriculaService.provideCurriculumByID(chatBotName)
-        await this.homoDigitalis.learn(curriculumContent)
+    public async handleTrainingData(chatBotName: string, intents: IIntent[]): Promise<void> {
+        console.log(chatBotName)
+        this.saveIntents(chatBotName, intents)
+        await this.homoDigitalis.learn(intents)
     }
 
-    private getIntents(): IIntent[] {
-        return [
-            {
-                answers: [
-                    {
-                        actions: ["thumbs up", "thumbs down"],
-                        text: "Bye. I hope to see you soon Michelski.",
-                    },
-                    {
-                        actions: [],
-                        text: "see you soon!",
-                    }],
-                language: "en",
-                name: "greetings.bye",
-                utterances: ["cu", "bye"],
-            },
-            {
-                answers: [
-                    {
-                        actions: ["thumbs up", "thumbs down"],
-                        text: "Hey. I'm glad your here.",
-                    }],
-                language: "en",
-                name: "greetings.hello",
-                utterances: ["hello", "hi", "hey"],
-            },
-        ]
+    private getIntents(chatBotName: string): IIntent[] {
+        let intentsFromFile: IIntent[]
+
+        try {
+            intentsFromFile =
+                JSON.parse(fs.readFileSync(path.join(__dirname, `../${chatBotName}.json`))
+                    .toString("utf8"))
+        } catch (error) {
+            intentsFromFile =
+                JSON.parse(fs.readFileSync(path.join(__dirname, "../fancy.json"))
+                    .toString("utf8"))
+
+        }
+
+        return intentsFromFile
+    }
+
+    private saveIntents(chatBotName: string, intents: IIntent[]): void {
+
+        fs.writeFileSync(path.join(__dirname, `../${chatBotName}.json`), JSON.stringify(intents))
     }
 
 }

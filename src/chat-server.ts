@@ -72,6 +72,10 @@ export class ChatServer {
                 this.administrator.handleGetTrainingData(socket.id, this.io, room)
             })
 
+            socket.on("train", (data: any) => {
+                this.administrator.handleTrainingData(data.chatBotName, data.intents)
+            })
+
             socket.on("join", (room: string) => {
                 console.log(`joining room ${room}`)
                 socket.join(room)
