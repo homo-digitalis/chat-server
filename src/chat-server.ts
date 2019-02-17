@@ -14,6 +14,7 @@ export interface IChatAdministrator {
     handleDisConnect(socket: any): void
     handleMessage(socketID: string, io: any, message: any, room: string): void
     handleTrainingData(chatbotName: string, intents: IIntent[]): void
+    handleGetTrainingData(socketID: string, io: any, chatbotName: string): void
 }
 
 export class ChatServer {
@@ -67,8 +68,8 @@ export class ChatServer {
                 this.administrator.handleMessage(socket.id, this.io, JSON.parse(message), room)
             })
 
-            socket.on("training-data", (trainingData: any) => {
-                this.administrator.handleTrainingData(trainingData.chatbotName, trainingData.intents)
+            socket.on("trainingdata", (room: string) => {
+                this.administrator.handleGetTrainingData(socket.id, this.io, room)
             })
 
             socket.on("join", (room: string) => {
