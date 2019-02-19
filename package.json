@@ -5,11 +5,12 @@
   "main": "./dist/index.js",
   "typings": "./dist/index.js",
   "scripts": {
-    "pm2-start": "export NODE_ENV=\"production\" && export CHAT_SERVER_PORT=\"443\" && pm2 start src/chat-server.ts --name chat-server",
+    "pm2-start": "export NODE_ENV=\"production\" && pm2 start dist/chat-server.js",
     "start": "export NODE_ENV=\"production\" && ts-node src/chat-server.ts 443",
     "test": "jest",
     "test:cov": "jest --coverage",
     "tslint": "tslint -p ./",
+    "git-init": "rm -rf .git && git init && git config --local credential.helper \"\" && git config --local user.email \"homo-digitalis@gmx.de\" && git config --local user.name \"homo-digitalis\"",
     "bp": "npm run tslint && rm -rf ./dist && rm -rf ./node_modules && npm i --save && tsc && npm publish"
   },
   "repository": {

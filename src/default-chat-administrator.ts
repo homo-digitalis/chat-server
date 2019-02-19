@@ -44,8 +44,16 @@ export class DefaultChatAdministrator implements IChatAdministrator {
                 this.preparedSocketIDs.push(socketID)
             }
             const answer: IAnswer = await this.homoDigitalis.answer(message)
-            io.to(room)
-                .emit("message", { type: "botMessage", text: answer.text })
+            if (answer.text === undefined) {
+                const defaultText: string =
+                    // tslint:disable-next-line:max-line-length
+                    `Bitte klicke auf das Graduierungshütchen und bringe mir bei wie ich auf "${message.text}" antworten soll.`
+                io.to(room)
+                    .emit("message", { type: "botMessage", text: defaultText })
+            } else {
+                io.to(room)
+                    .emit("message", { type: "botMessage", text: answer.text })
+            }
         }
     }
 
