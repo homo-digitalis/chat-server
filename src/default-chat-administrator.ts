@@ -47,7 +47,7 @@ export class DefaultChatAdministrator implements IChatAdministrator {
             if (answer.text === undefined) {
                 const defaultText: string =
                     // tslint:disable-next-line:max-line-length
-                    `Bitte klicke auf das Graduierungshütchen und bringe mir bei wie ich auf "${message.text}" antworten soll.`
+                    `Bitte klicke auf das Graduierungshütchen und bringe mir bei wie ich auf "${message}" antworten soll.`
                 io.to(room)
                     .emit("message", { type: "botMessage", text: defaultText })
             } else {
