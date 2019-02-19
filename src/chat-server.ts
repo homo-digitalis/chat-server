@@ -35,7 +35,7 @@ export class ChatServer {
         console.log(process.env.NODE_ENV)
         if (process.env.NODE_ENV === "production") {
             console.log("starting https")
-            this.options = new HTTPSProvider("chat-server-certificate").provideHTTPSOptions()
+            this.options = new HTTPSProvider("angular-server-certificate").provideHTTPSOptions()
             this.server = https.createServer(this.options, this.expressApp)
         } else {
             console.log("starting http")
@@ -105,8 +105,7 @@ export class ChatServer {
 }
 
 // choose any port number that fits you
-const chatServerPort: number = (process.argv[2] === undefined) ?
-    Number(process.env.CHAT_SERVER_PORT) : Number(process.argv[2])
+const chatServerPort: number = 8443
 
 const chatServer: ChatServer = new ChatServer(new DefaultChatAdministrator())
 chatServer.start(chatServerPort)
