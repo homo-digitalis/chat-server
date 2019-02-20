@@ -17,6 +17,21 @@ export interface IChatAdministrator {
     handleGetTrainingData(socketID: string, io: any, chatbotName: string): void
 }
 
+export interface IChatbotInfo {
+    limitedUsage: boolean
+    authorizationQuestion: string
+    intents: IIntent[]
+}
+
+export enum events {
+    connect = "connect",
+    disconnect = "disconnect",
+    message = "message",
+    provideChatBotInfo = "provideChatBotInfo",
+    saveChatBotInfo = "saveChatBotInfo",
+    join = "join",
+}
+
 export interface IMessage {
     text: string
     fromChatBot: boolean
@@ -105,7 +120,8 @@ export class ChatServer {
 }
 
 // choose any port number that fits you
-const chatServerPort: number = 8443
+// const chatServerPort: number = 8443
+const chatServerPort: number = 3000
 
 const chatServer: ChatServer = new ChatServer(new DefaultChatAdministrator())
 chatServer.start(chatServerPort)

@@ -4,7 +4,7 @@ import { HomoDigitalis } from "homo-digitalis"
 import { IIntent } from "nlp-trainer"
 import { IAnswer } from "nlp-with-actions"
 import * as path from "path"
-import { IChatAdministrator } from "./chat-server"
+import { IChatAdministrator, IChatbotInfo } from "./chat-server"
 
 export interface IAuthenticatedSocketID {
     socketID: string,
@@ -73,20 +73,21 @@ export class DefaultChatAdministrator implements IChatAdministrator {
     }
 
     private getIntents(chatBotName: string): IIntent[] {
-        let intentsFromFile: IIntent[]
+
+        let chatBotInfo: IChatbotInfo
 
         try {
-            intentsFromFile =
+            chatBotInfo =
                 JSON.parse(fs.readFileSync(path.join(__dirname, `../training-data/${chatBotName}.json`))
                     .toString("utf8"))
         } catch (error) {
-            intentsFromFile =
+            chatBotInfo =
                 JSON.parse(fs.readFileSync(path.join(__dirname, "../training-data/fancy.json"))
                     .toString("utf8"))
 
         }
 
-        return intentsFromFile
+        return chatBotInfo.intents
     }
 
     private saveIntents(chatBotName: string, intents: IIntent[]): void {
