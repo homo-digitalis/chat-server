@@ -4,7 +4,7 @@ import { HomoDigitalis } from "homo-digitalis"
 import { IIntent } from "nlp-trainer"
 import { IAnswer } from "nlp-with-actions"
 import * as path from "path"
-import { IChatAdministrator, IChatbotInfo } from "./chat-server"
+import { IChatAdministrator, IChatBotInfo } from "./chat-server"
 
 export interface IAuthenticatedSocketID {
     socketID: string,
@@ -59,22 +59,22 @@ export class DefaultChatAdministrator implements IChatAdministrator {
 
     public async handleGetTrainingData(socketID: string, io: any, chatBotName: any): Promise<void> {
         console.log(chatBotName)
-        const intents: IIntent[] = this.getIntents(chatBotName)
+        const chatBotInfo: IChatBotInfo = this.getChatBotInfo(chatBotName)
         io.to(chatBotName)
-            .emit("trainingdata", intents)
+            .emit("trainingdata", chatBotInfo)
 
-        await this.homoDigitalis.learn(intents)
+        await this.homoDigitalis.learn(chatBotInfo.intents)
     }
 
-    public async handleTrainingData(chatBotName: string, intents: IIntent[]): Promise<void> {
+    public async saveChatBotInfo(chatBotName: string, chatBotInfo: IChatBotInfo): Promise<void> {
         console.log(chatBotName)
-        this.saveIntents(chatBotName, intents)
-        await this.homoDigitalis.learn(intents)
+        this.saveIntents(chatBotName, chatBotInfo.intents)
+        await this.homoDigitalis.learn(chatBotInfo.intents)
     }
 
-    private getIntents(chatBotName: string): IIntent[] {
+    private getChatBotInfo(chatBotName: string): IChatBotInfo {
 
-        let chatBotInfo: IChatbotInfo
+        let chatBotInfo: IChatBotInfo
 
         try {
             chatBotInfo =
@@ -87,7 +87,7 @@ export class DefaultChatAdministrator implements IChatAdministrator {
 
         }
 
-        return chatBotInfo.intents
+        return chatBotInfo
     }
 
     private saveIntents(chatBotName: string, intents: IIntent[]): void {

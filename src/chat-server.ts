@@ -13,11 +13,11 @@ export interface IChatAdministrator {
     handleConnect(socket: any): void
     handleDisConnect(socket: any): void
     handleMessage(socketID: string, io: any, message: any, room: string): void
-    handleTrainingData(chatbotName: string, intents: IIntent[]): void
+    saveChatBotInfo(chatbotName: string, chatBotInfo: IChatBotInfo): void
     handleGetTrainingData(socketID: string, io: any, chatbotName: string): void
 }
 
-export interface IChatbotInfo {
+export interface IChatBotInfo {
     limitedUsage: boolean
     authorizationQuestion: string
     intents: IIntent[]
@@ -93,7 +93,8 @@ export class ChatServer {
             })
 
             socket.on("train", (data: any) => {
-                this.administrator.handleTrainingData(data.chatBotName, data.intents)
+                console.log(data)
+                this.administrator.saveChatBotInfo(data.chatBotName, data)
             })
 
             socket.on("join", (room: string) => {
