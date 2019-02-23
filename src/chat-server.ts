@@ -89,12 +89,10 @@ export class ChatServer {
             })
 
             socket.on("trainingdata", (room: string) => {
-                console.log("trainingdata")
                 this.administrator.handleGetTrainingData(socket.id, this.io, room)
             })
 
             socket.on("train", (data: IChatBotInfo) => {
-                console.log(`train: ${JSON.stringify(data)}`)
                 this.administrator.saveChatBotInfo(data)
             })
 

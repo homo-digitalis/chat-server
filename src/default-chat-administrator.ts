@@ -26,7 +26,6 @@ export class DefaultChatAdministrator implements IChatAdministrator {
         const allRespHDs: IRespHD[] = []
         fs.readdirSync(DefaultChatAdministrator.trainingDataFolder)
             .forEach(async (file: string) => {
-                console.log(file)
                 const respHD: IRespHD = {
                     chatBotName: file,
                     homoDigitalis: new HomoDigitalis(),
@@ -68,7 +67,6 @@ export class DefaultChatAdministrator implements IChatAdministrator {
 
     // tslint:disable-next-line:prefer-function-over-method
     public async handleConnect(socket: any): Promise<void> {
-        // console.log(socket)
         const authenticatedSocketID: IAuthenticatedSocketID = {
             room: "room",
             socketID: socket.id,
@@ -122,13 +120,26 @@ export class DefaultChatAdministrator implements IChatAdministrator {
         io.to(chatBotName)
             .emit("trainingdata", chatBotInfo)
 
-        const homoDigitalis: HomoDigitalis =
-            this.respHDs.filter((responsible: IRespHD) => responsible.chatBotName === chatBotName)[0].homoDigitalis
-        if (homoDigitalis === undefined) {
-            throw new Error("Somebody wanted to train an undefined Homo Digitalis")
+        let respHD: IRespHD =
+            this.respHDs.filter((responsible: IRespHD) => responsible.chatBotName === chatBotName)[0]
+
+        if (respHD === undefined) {
+            await this.saveChatBotInfo({
+                authorizationQuestion: "string",
+                intents: [],
+                limitedUsage: false,
+                name: chatBotName,
+            })
+            respHD = this.respHDs.filter((responsible: IRespHD) => responsible.chatBotName === chatBotName)[0]
         }
 
-        await homoDigitalis.learn(chatBotInfo.intents)
+        const homoDigitalis: HomoDigitalis = respHD.homoDigitalis
+        if (homoDigitalis === undefined) {
+            throw new Error("Somebody wanted to train an undefined Homo Digitalis")
+        } else {
+            await homoDigitalis.learn(chatBotInfo.intents)
+        }
+
     }
 
     public async saveChatBotInfo(chatBotInfo: IChatBotInfo): Promise<void> {
@@ -149,6 +160,7 @@ export class DefaultChatAdministrator implements IChatAdministrator {
         fs.writeFileSync(
             `${DefaultChatAdministrator.trainingDataFolder}/${chatBotInfo.name}.json`, JSON.stringify(chatBotInfo))
 
+        console.log(respHD.chatBotName)
         await respHD.homoDigitalis.learn(chatBotInfo.intents)
 
     }
