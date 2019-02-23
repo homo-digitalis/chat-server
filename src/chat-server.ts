@@ -13,11 +13,12 @@ export interface IChatAdministrator {
     handleConnect(socket: any): void
     handleDisConnect(socket: any): void
     handleMessage(socketID: string, io: any, message: any, room: string): void
-    saveChatBotInfo(chatbotName: string, chatBotInfo: IChatBotInfo): void
+    saveChatBotInfo(chatBotInfo: IChatBotInfo): void
     handleGetTrainingData(socketID: string, io: any, chatbotName: string): void
 }
 
 export interface IChatBotInfo {
+    name: string,
     limitedUsage: boolean
     authorizationQuestion: string
     intents: IIntent[]
@@ -47,7 +48,6 @@ export class ChatServer {
 
     public constructor(private readonly administrator: IChatAdministrator) {
         ChatServer.configurationReader = new ConfigurationReader(path.join(__dirname, "../.env"))
-        console.log(process.env.NODE_ENV)
         if (process.env.NODE_ENV === "production") {
             console.log("starting https")
             this.options = new HTTPSProvider("angular-server-certificate").provideHTTPSOptions()
@@ -89,12 +89,13 @@ export class ChatServer {
             })
 
             socket.on("trainingdata", (room: string) => {
+                console.log("trainingdata")
                 this.administrator.handleGetTrainingData(socket.id, this.io, room)
             })
 
-            socket.on("train", (data: any) => {
-                console.log(data)
-                this.administrator.saveChatBotInfo(data.chatBotName, data)
+            socket.on("train", (data: IChatBotInfo) => {
+                console.log(`train: ${JSON.stringify(data)}`)
+                this.administrator.saveChatBotInfo(data)
             })
 
             socket.on("join", (room: string) => {
@@ -108,7 +109,6 @@ export class ChatServer {
             console.log(`chat server started on port ${port}`)
         })
 
-        console.log(port)
         if (port === 80) {
             this.expressApp.use("/", require("redirect-https")({
                 body: "<!-- Hello Mr Developer! Please use HTTPS instead -->",
@@ -124,5 +124,11 @@ export class ChatServer {
 // const chatServerPort: number = 8443
 const chatServerPort: number = 3000
 
-const chatServer: ChatServer = new ChatServer(new DefaultChatAdministrator())
-chatServer.start(chatServerPort)
+DefaultChatAdministrator.getInstance()
+    .then((defaultChatAdministrator: DefaultChatAdministrator) => {
+        const chatServer: ChatServer = new ChatServer(defaultChatAdministrator)
+        chatServer.start(chatServerPort)
+    })
+    .catch((error: Error) => {
+        console.log("shit happened")
+    })

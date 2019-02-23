@@ -1,4 +1,3 @@
-import { CurriculaService } from "@homo-digitalis/curricula"
 import * as fs from "fs"
 import { HomoDigitalis } from "homo-digitalis"
 import { IIntent } from "nlp-trainer"
@@ -11,14 +10,65 @@ export interface IAuthenticatedSocketID {
     room: string
 }
 
+export interface IRespHD {
+    chatBotName: string,
+    homoDigitalis: HomoDigitalis
+}
+
 export class DefaultChatAdministrator implements IChatAdministrator {
+
+    private static readonly trainingDataFolder: string = path.join(__dirname, "../training-data")
+    public static async getInstance(): Promise<DefaultChatAdministrator> {
+        return new DefaultChatAdministrator(await DefaultChatAdministrator.getAllResponsibleHDs())
+    }
+
+    public static async getAllResponsibleHDs(): Promise<IRespHD[]> {
+        const allRespHDs: IRespHD[] = []
+        fs.readdirSync(DefaultChatAdministrator.trainingDataFolder)
+            .forEach(async (file: string) => {
+                console.log(file)
+                const respHD: IRespHD = {
+                    chatBotName: file,
+                    homoDigitalis: new HomoDigitalis(),
+                }
+
+                await respHD.homoDigitalis.learn(DefaultChatAdministrator.getChatBotInfo(file).intents)
+                allRespHDs.push(respHD)
+            })
+
+        return allRespHDs
+    }
+
+    private static getChatBotInfo(chatBotName: string): IChatBotInfo {
+
+        let chatBotInfo: IChatBotInfo
+
+        try {
+            chatBotInfo =
+                JSON.parse(fs.readFileSync(`${DefaultChatAdministrator.trainingDataFolder}/${chatBotName}.json`)
+                    .toString("utf8"))
+        } catch (error) {
+            chatBotInfo =
+                JSON.parse(fs.readFileSync(`${DefaultChatAdministrator.trainingDataFolder}/fancy.json`)
+                    .toString("utf8"))
+
+        }
+
+        return chatBotInfo
+    }
+
     private readonly authenticatedSocketIDs: IAuthenticatedSocketID[] = []
     private readonly preparedSocketIDs: string[] = []
-    private readonly homoDigitalis: HomoDigitalis = new HomoDigitalis()
-    private readonly curriculaService: CurriculaService = new CurriculaService()
+    private readonly respHDs: IRespHD[] = []
+
+    // tslint:disable-next-line:unnecessary-constructor
+    private constructor(respHDs: IRespHD[]) {
+        this.respHDs = respHDs
+    }
 
     // tslint:disable-next-line:prefer-function-over-method
     public async handleConnect(socket: any): Promise<void> {
+        // console.log(socket)
         const authenticatedSocketID: IAuthenticatedSocketID = {
             room: "room",
             socketID: socket.id,
@@ -29,6 +79,23 @@ export class DefaultChatAdministrator implements IChatAdministrator {
 
     public handleDisConnect(socket: any): void {
         console.log(`user disconnected: ${socket.id}`)
+    }
+
+    public async getAnswer(message: string, room: string): Promise<IAnswer> {
+        const homoDigitalis: HomoDigitalis =
+            this.respHDs.filter((responsible: IRespHD) => responsible.chatBotName === room)[0].homoDigitalis
+        if (homoDigitalis === undefined) {
+            throw new Error("Somebody wanted to get an answer by an undefined Homo Digitalis")
+        }
+
+        const answer: IAnswer =
+            await homoDigitalis.answer(message)
+        if (answer.text === undefined) {
+            answer.text =
+                `Bitte klicke auf das Graduierungshütchen und bringe mir bei wie ich auf "${message}" antworten soll.`
+        }
+
+        return answer
     }
 
     public async handleMessage(socketID: string, io: any, message: any, room: string): Promise<void> {
@@ -43,56 +110,47 @@ export class DefaultChatAdministrator implements IChatAdministrator {
             if (!this.preparedSocketIDs.some((preparedSocketID: string) => preparedSocketID === socketID)) {
                 this.preparedSocketIDs.push(socketID)
             }
-            const answer: IAnswer = await this.homoDigitalis.answer(message)
-            if (answer.text === undefined) {
-                const defaultText: string =
-                    // tslint:disable-next-line:max-line-length
-                    `Bitte klicke auf das Graduierungshütchen und bringe mir bei wie ich auf "${message}" antworten soll.`
-                io.to(room)
-                    .emit("message", { type: "botMessage", text: defaultText })
-            } else {
-                io.to(room)
-                    .emit("message", { type: "botMessage", text: answer.text })
-            }
+            const answer: IAnswer = await this.getAnswer(message, room)
+            io.to(room)
+                .emit("message", { type: "botMessage", text: answer.text })
+
         }
     }
 
     public async handleGetTrainingData(socketID: string, io: any, chatBotName: any): Promise<void> {
-        console.log(chatBotName)
-        const chatBotInfo: IChatBotInfo = this.getChatBotInfo(chatBotName)
+        const chatBotInfo: IChatBotInfo = DefaultChatAdministrator.getChatBotInfo(chatBotName)
         io.to(chatBotName)
             .emit("trainingdata", chatBotInfo)
 
-        await this.homoDigitalis.learn(chatBotInfo.intents)
-    }
-
-    public async saveChatBotInfo(chatBotName: string, chatBotInfo: IChatBotInfo): Promise<void> {
-        console.log(chatBotName)
-        this.saveIntents(chatBotName, chatBotInfo.intents)
-        await this.homoDigitalis.learn(chatBotInfo.intents)
-    }
-
-    private getChatBotInfo(chatBotName: string): IChatBotInfo {
-
-        let chatBotInfo: IChatBotInfo
-
-        try {
-            chatBotInfo =
-                JSON.parse(fs.readFileSync(path.join(__dirname, `../training-data/${chatBotName}.json`))
-                    .toString("utf8"))
-        } catch (error) {
-            chatBotInfo =
-                JSON.parse(fs.readFileSync(path.join(__dirname, "../training-data/fancy.json"))
-                    .toString("utf8"))
-
+        const homoDigitalis: HomoDigitalis =
+            this.respHDs.filter((responsible: IRespHD) => responsible.chatBotName === chatBotName)[0].homoDigitalis
+        if (homoDigitalis === undefined) {
+            throw new Error("Somebody wanted to train an undefined Homo Digitalis")
         }
 
-        return chatBotInfo
+        await homoDigitalis.learn(chatBotInfo.intents)
     }
 
-    private saveIntents(chatBotName: string, intents: IIntent[]): void {
+    public async saveChatBotInfo(chatBotInfo: IChatBotInfo): Promise<void> {
+        let respHD: IRespHD =
+            this.respHDs.filter((responsible: IRespHD) => responsible.chatBotName === chatBotInfo.name)[0]
+        if (respHD === undefined) {
 
-        fs.writeFileSync(path.join(__dirname, `../training-data/${chatBotName}.json`), JSON.stringify(intents))
+            this.respHDs.push({
+                chatBotName: chatBotInfo.name,
+                homoDigitalis: new HomoDigitalis(),
+            })
+
+            chatBotInfo.intents = DefaultChatAdministrator.getChatBotInfo("fancy").intents
+
+            respHD = this.respHDs[this.respHDs.length - 1]
+        }
+
+        fs.writeFileSync(
+            `${DefaultChatAdministrator.trainingDataFolder}/${chatBotInfo.name}.json`, JSON.stringify(chatBotInfo))
+
+        await respHD.homoDigitalis.learn(chatBotInfo.intents)
+
     }
 
 }
